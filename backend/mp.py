@@ -106,15 +106,16 @@ def process_image_data():
     return jsonify({"message": f"Face processed and stored successfully for {name}"})
 
 def rtsp_stream():
-    """Captures frames from RTSP stream and processes faces"""
     cap = cv2.VideoCapture("Title_1.mp4") # http://192.0.0.4:3000
 
     while True:
         ret, frame = cap.read()
         if not ret or frame is None:
             print("Error: Frame not captured")
-            cap.set(cv2.CAP_PROP_POS_FRAMES, 0) 
-            continue
+            # cap.set(cv2.CAP_PROP_POS_FRAMES, 0) 
+            # continue
+
+            break
 
         process_faces(frame, store=False)
 
