@@ -2,18 +2,31 @@ import cv2
 import torch
 import numpy as np
 import pymongo
+from flask import Flask, request, jsonify
+from flask_socketio import SocketIO
 from ultralytics import YOLO
 from facenet_pytorch import InceptionResnetV1
 from sklearn.metrics.pairwise import cosine_similarity
 import os
 from dotenv import load_dotenv
+from flask_cors import CORS
 
 load_dotenv()
 
+# Flask app setup
+app = Flask(__name__)
+CORS(app)
+socketio = SocketIO(app)
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    return {"host": request.host}
+
+# Load models
 model = YOLO("yolov8n-face.pt")
 facenet = InceptionResnetV1(pretrained='vggface2').eval()
 
+# MongoDB setup
 client = pymongo.MongoClient(os.getenv("MONGO_URI"))
 db = client["face_recognition"]
 collection = db["face_vectors"]
@@ -52,7 +65,7 @@ def find_best_match(input_vector, threshold=0.6):
 
 def process_faces(image, store=False):
     """Yeh function face detect karega, vector generate karega aur match check karega"""
-    results = model.predict(image)
+    results = model.predict(image, verbose=False)
     for result in results:
         for box in result.boxes.xyxy:
             x1, y1, x2, y2 = map(int, box)
@@ -67,20 +80,33 @@ def process_faces(image, store=False):
 
                 if store:
                     store_face_vector("Are ye to BHALU h", face_vector)
-                
                 else:
                     best_match, similarity = find_best_match(face_vector)
                     if best_match != "Unknown Person":
-                        print(f"Best Match: {best_match}, Similarity: {similarity*100}")
+                        print(f"Best Match: {best_match}, Similarity: {similarity*100:.2f}%")
+                        socketio.emit("face_detected", {"message": f"Face detected: {best_match}, Similarity: {similarity*100:.2f}%"})
 
+@app.route('/image_data', methods = ["POST"])
+def process_image_data():
+    name = request.form.get('name')
+    file = request.files.get('image')
 
-is_image = False 
+    if not name:
+        return jsonify({"error": "Name is required"}), 400
 
-if is_image:
-    image = cv2.imread("bhalu.jpg")
-    process_faces(image, store=True)  # ✅ Sirf image ke case me store karega
-else:
-    cap = cv2.VideoCapture("Title_1.mp4")
+    if not file:
+        return jsonify({"error": "No image provided"}), 400
+    
+    image = np.frombuffer(file.read(), np.uint8)
+    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+     
+    process_faces(image, store=True, name=name)
+    
+    return jsonify({"message": f"Face processed and stored successfully for {name}"})
+
+def rtsp_stream():
+    """Captures frames from RTSP stream and processes faces"""
+    cap = cv2.VideoCapture("http://192.0.0.4:3000")
 
     while True:
         ret, frame = cap.read()
@@ -88,8 +114,10 @@ else:
             print("Error: Frame not captured")
             break
 
-        process_faces(frame, store=False)  # ❌ Video ke case me store nahi karega
+        process_faces(frame, store=False)
 
     cap.release()
 
-cv2.destroyAllWindows()
+if __name__ == '__main__':
+    socketio.start_background_task(rtsp_stream)
+    socketio.run(app, host='0.0.0.0', port=5000)
