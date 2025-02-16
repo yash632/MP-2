@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Image</title>
+</head>
+<body>
+    <h2>Upload Image</h2>
+    <form id="imageForm">
+        <input type="text" name="name" id="name" placeholder="Enter Name" required>
+        <input type="file" name="image" id="image" accept="image/*" required>
+        <button type="submit">Submit</button>
+    </form>
+
+    <script>
+        document.getElementById("imageForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Default form submission roko
+
+            let formData = new FormData(); 
+            formData.append("name", document.getElementById("name").value);  
+            formData.append("image", document.getElementById("image").files[0]);
+
+            fetch("https://stunning-capybara-jjjg5wpr6956cppvr-5000.app.github.dev/image_data", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => alert("Success: " + data.message))
+            .catch(error => alert("Error: " + error));
+        });
+    </script>
+</body>
+</html>
+
