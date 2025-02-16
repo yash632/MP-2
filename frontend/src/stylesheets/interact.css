@@ -1,0 +1,83 @@
+/* Improved Styling for Interact Component */
+
+/* Top Navigation Bar */
+.top_nav {
+    background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+    width: 100vw;
+    height: 80px;
+    position: fixed;
+    top: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /*padding: 0 30px;*/
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.top_nav img {
+    height: 60px;
+    margin-left: 30px;
+}
+
+.top_nav button {
+    background-color: #1e90ff;
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 8px 16px;
+    transition: 0.3s ease-in-out;
+    margin-right: 30px;
+}
+
+.top_nav button:hover {
+    background-color: #0d74d3;
+}
+
+/* Sidebar */
+.side_bar {
+    height: calc(100vh - 80px);
+    width: 25vw;
+    background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+    position: fixed;
+    top: 80px;
+    left: 0;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    padding-top: 20px;
+    box-shadow: 4px 0px 10px rgba(0, 0, 0, 0.5);
+}
+
+.side_bar div {
+    background: #1e1e1e;
+    color: #1e90ff;
+    width: 85%;
+    padding: 15px;
+    margin: 15px 0;
+    font-size: 1.5em;
+    text-align: center;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+    font-weight: bold;
+    box-shadow: 0px 0px 8px rgba(30, 144, 255, 0.5);
+}
+
+.side_bar div:hover {
+    background: #1e90ff;
+    color: white;
+    transform: scale(1.05);
+    box-shadow: 0px 0px 15px rgba(30, 144, 255, 0.8);
+}
+
+.frame{
+    width: 73vw;
+    height: calc(100vh - 80px);
+    background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+    position: fixed;
+    top: 80px;
+    right: 0;
+}
+
+
