@@ -16,7 +16,9 @@ load_dotenv()
 # Flask app setup
 app = Flask(__name__)
 CORS(app)
-socketio = SocketIO(app)
+# socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
+
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -64,7 +66,6 @@ def find_best_match(input_vector, threshold=0.6):
     return (best_match, highest_similarity) if highest_similarity >= threshold else ("Unknown Person", highest_similarity)
 
 def process_faces(image, store=False, name = None):
-    """Yeh function face detect karega, vector generate karega aur match check karega"""
     results = model.predict(image, verbose=False)
     for result in results:
         for box in result.boxes.xyxy:
@@ -106,13 +107,14 @@ def process_image_data():
 
 def rtsp_stream():
     """Captures frames from RTSP stream and processes faces"""
-    cap = cv2.VideoCapture("http://192.0.0.4:3000")
+    cap = cv2.VideoCapture("Title_1.mp4") # http://192.0.0.4:3000
 
     while True:
         ret, frame = cap.read()
         if not ret or frame is None:
             print("Error: Frame not captured")
-            break
+            cap.set(cv2.CAP_PROP_POS_FRAMES, 0) 
+            continue
 
         process_faces(frame, store=False)
 
@@ -120,4 +122,4 @@ def rtsp_stream():
 
 if __name__ == '__main__':
     socketio.start_background_task(rtsp_stream)
-    socketio.run(app, host='0.0.0.0', port=5000)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
