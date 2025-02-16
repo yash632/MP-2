@@ -63,7 +63,7 @@ def find_best_match(input_vector, threshold=0.6):
 
     return (best_match, highest_similarity) if highest_similarity >= threshold else ("Unknown Person", highest_similarity)
 
-def process_faces(image, store=False):
+def process_faces(image, store=False, name = None):
     """Yeh function face detect karega, vector generate karega aur match check karega"""
     results = model.predict(image, verbose=False)
     for result in results:
@@ -79,7 +79,7 @@ def process_faces(image, store=False):
                 face_vector = normalize_vector(face_vector)
 
                 if store:
-                    store_face_vector("Are ye to BHALU h", face_vector)
+                    store_face_vector(name, face_vector)
                 else:
                     best_match, similarity = find_best_match(face_vector)
                     if best_match != "Unknown Person":
