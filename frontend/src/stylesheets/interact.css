@@ -222,11 +222,16 @@
 
 
 .view {
-    width: 80%;
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding: 20px;
+    height: 70vh !important;
+    overflow-y: scroll;
+    scrollbar-width: thin;
+    margin-top: 30px;
 }
 
 .view li {
@@ -236,9 +241,9 @@
     background-color: #222;
     padding: 10px;
     border-radius: 8px;
-    margin-bottom: 10px;
+    margin: 20px 0 0 0 ;
     border: 1px solid #1e90ff;
-
+    width: 80%;
 }
 
 .view li h1{

@@ -137,6 +137,46 @@ const Interact = () => {
           <h1>Register a Mission Person Profile</h1>
         </div>
         <ol className='view'>
+         
+          <li>
+            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
+          </li>
+          <li>
+            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
+          </li>
+          <li>
+            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
+          </li>
+          <li>
+            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
+          </li>
+          <li>
+            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
+          </li>
+          <li>
+            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
+          </li>
+          <li>
+            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
+          </li>
+          <li>
+            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
+          </li>
+          <li>
+            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
+          </li>
+          <li>
+            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
+          </li>
+          <li>
+            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
+          </li>
+          <li>
+            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
+          </li>
+          <li>
+            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
+          </li>
           <li>
             <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
           </li>
