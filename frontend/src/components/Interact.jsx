@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import '../stylesheets/interact.css'
-import { Button, Dialog } from "@mui/material";
+import { Button, Dialog} from "@mui/material";
+import axios from 'axios';
 
 const Interact = () => {
   const [open, setOpen] = useState(false);
@@ -9,21 +10,55 @@ const Interact = () => {
   const [open4, setOpen4] = useState(false);
   const [open5, setOpen5] = useState(false);
 
+  const [rtsp, setRtsp] = useState("")
+  const [name, setName] = useState("")
+  const [idNum, setIdNum] = useState("")
+  const [crime, setCrime] = useState("")
   const [image, setImage] = useState(null);
 
-  // Image upload handler
+  
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImage(reader.result);  // Set the image preview
+        setImage(reader.result);
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const rtsp_submit_handler = async (e) => {
+    e.preventDefault();
+   
+    try {
+        const response = await axios.post("/rtsp_data", { 
+            rtsp
+        });
 
+        console.log("RTSP Setup Successful:", response.data);
+    } catch (error) {
+        console.error("Error in RTSP Setup:", error);
+    }
+};
+  const criminal_submit_handler = async (e) => {
+    e.preventDefault();
+    if (crime === "") {
+      setCrime("Missing Person");
+  }
+    try {
+        const response = await axios.post("/image_data", { 
+            name, 
+            image, 
+            idNum,
+            crime
+        });
+
+        console.log("Criminal added:", response.data);
+    } catch (error) {
+        console.error("Error adding criminal:", error);
+    }
+};
 
   return (
     <>
@@ -60,9 +95,9 @@ const Interact = () => {
             <h1>Setup RTSP</h1>
           </div>
 
-          <form className="form-body">
-            <input type="text" placeholder="Enter RTSP URL" />
-            <Button variant="contained" className="connect-btn">Connect</Button>
+          <form onSubmit={rtsp_submit_handler()} className="form-body">
+            <input type="text" placeholder="Enter RTSP URL" onChange={(e)=>setRtsp(e.target.value)}/>
+            <Button type='submit' variant="contained" className="connect-btn">Connect</Button>
           </form>
         </div>
       </Dialog>
@@ -74,7 +109,7 @@ const Interact = () => {
           <h1>Register a Criminal Profile</h1>
         </div>
 
-        <div className="dialog-container-2">
+        <form className="dialog-container-2"onSubmit={criminal_submit_handler()}>
           <div className="image-upload-section">
             <img
               onClick={() => document.getElementById('file-upload').click()}
@@ -87,15 +122,21 @@ const Interact = () => {
               accept="image/*"
               onChange={handleImageUpload}
               style={{ display: 'none' }}
+              required
             />
           </div>
           <div className="form-body-2">
-            <input type="text" placeholder="Enter Criminal's Name" />
-            <input type="text" placeholder="Enter Criminal's Crime" />
-            <input type="text" placeholder="Enter Criminal Identification Number" />
-            <Button className="add-record-btn">Add New Record</Button>
+            
+            <input type="text" placeholder="Enter Criminal's Name" onChange={(e)=>setName(e.target.value)} required />
+           
+            <input type="text" placeholder="Enter Criminal's Crime" onChange={(e)=>setCrime(e.target.value)} required />
+            
+            <input type="text" placeholder="Enter Criminal Identification Number" onChange={(e)=>setIdNum(e.target.value)} required />
+            
+            <Button type='submit' className="add-record-btn">Add New Record</Button>
+         
           </div>
-        </div>
+        </form>
       </Dialog>
 
       <Dialog transitionDuration={0} open={open3} onClose={() => setOpen3(false)} className="custom-dialog-2">
@@ -105,7 +146,7 @@ const Interact = () => {
           <h1>Register a Mission Person Profile</h1>
         </div>
 
-        <div className="dialog-container-2">
+        <form onSubmit={criminal_submit_handler()} className="dialog-container-2">
           <div className="image-upload-section">
             <img
               onClick={() => document.getElementById('file-upload').click()}
@@ -117,15 +158,18 @@ const Interact = () => {
               type="file"
               accept="image/*"
               onChange={handleImageUpload}
-              style={{ display: 'none' }}
+              style={{ display: 'none' }} required 
             />
           </div>
           <div className="form-body-2">
-            <input type="text" placeholder="Enter Person's Name" />
-            <input type="text" placeholder="Enter Person Identification Number" />
-            <Button className="add-record-btn">Add New Record</Button>
+            <input type="text" placeholder="Enter Person's Name" onChange={(e)=>setName(e.target.value)} required />
+           
+            <input type="text" placeholder="Enter Person Identification Number" onChange={(e)=>setIdNum(e.target.value)} required/>
+            
+            <Button type='submit' className="add-record-btn">Add New Record</Button>
+         
           </div>
-        </div>
+        </form>
       </Dialog>
 
       <Dialog transitionDuration={0} open={open4} onClose={() => setOpen4(false)} className="custom-dialog-2"></Dialog>
