@@ -16,9 +16,10 @@ load_dotenv()
 # Flask app setup
 app = Flask(__name__)
 CORS(app)
-# socketio = SocketIO(app)
-socketio = SocketIO(app, cors_allowed_origins="*")
+# app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  
 
+# socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins="*", max_http_buffer_size=100 * 1024 * 1024)
 
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -36,11 +37,12 @@ collection = db["face_vectors"]
 def normalize_vector(vector):
     return vector / np.linalg.norm(vector)
 
-def store_face_vector(name, vector):
+def store_face_vector(name, vector, idNum, crime):
     if not is_vector_stored(vector):
-        collection.insert_one({"name": name, "face_vector": vector.tolist()})
+        collection.insert_one({"name": name, "idNum": idNum, "crime": crime, "face_vector": vector.tolist()})
         print(f"✅ Face vector stored for {name}")
-
+        get_all_vectors()
+        
 def get_all_vectors():
     data = collection.find({}, {"face_vector": 1, "name": 1})
     return [(item["name"], np.array(item["face_vector"])) for item in data]
@@ -65,7 +67,7 @@ def find_best_match(input_vector, threshold=0.6):
 
     return (best_match, highest_similarity) if highest_similarity >= threshold else ("Unknown Person", highest_similarity)
 
-def process_faces(image, store=False, name = None):
+def process_faces(image, store=False, name = None, idNum = None, crime = None):
     results = model.predict(image, verbose=False)
     for result in results:
         for box in result.boxes.xyxy:
@@ -80,7 +82,7 @@ def process_faces(image, store=False, name = None):
                 face_vector = normalize_vector(face_vector)
 
                 if store:
-                    store_face_vector(name, face_vector)
+                    store_face_vector(name, face_vector, idNum, crime)
                 else:
                     best_match, similarity = find_best_match(face_vector)
                     if best_match != "Unknown Person":
@@ -90,6 +92,8 @@ def process_faces(image, store=False, name = None):
 @app.route('/image_data', methods = ["POST"])
 def process_image_data():
     name = request.form.get('name')
+    crime = request.form.get('crime')
+    idNum = request.form.get('idNum')
     file = request.files.get('image')
 
     if not name:
@@ -101,7 +105,7 @@ def process_image_data():
     image = np.frombuffer(file.read(), np.uint8)
     image = cv2.imdecode(image, cv2.IMREAD_COLOR)
      
-    process_faces(image, store=True, name=name)
+    process_faces(image, store=True, name=name, idNum=idNum, crime=crime)
     
     return jsonify({"message": f"Face processed and stored successfully for {name}"})
 
