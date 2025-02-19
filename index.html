@@ -3,175 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Face Detection & Upload</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            width: 100%;
-            max-width: 800px;
-            background-color: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        h2 {
-            color: #333;
-            text-align: center;
-        }
-        /* Tab styles */
-        .tabs {
-            display: flex;
-            justify-content: space-around;
-            margin-bottom: 20px;
-        }
-        .tab {
-            padding: 10px 20px;
-            background-color: #f0f0f0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            cursor: pointer;
-            text-align: center;
-            width: 100%;
-        }
-        .tab.active {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .form-container {
-            display: none;
-        }
-        .form-container.active {
-            display: block;
-        }
-        form {
-            margin-bottom: 20px;
-        }
-        input[type="text"], input[type="file"] {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #4CAF50;
-            color: white;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        #alerts {
-            margin-top: 20px;
-        }
-        .alert {
-            background-color: #e7f3fe;
-            border-left: 5px solid #4CAF50;
-            margin-bottom: 10px;
-            padding: 10px;
-            font-size: 16px;
-        }
-        .alert strong {
-            font-weight: 600;
-        }
-    </style>
+    <title>Upload Image & Face Alerts</title>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
 </head>
 <body>
+    <h2>Upload Image</h2>
+    <form id="imageForm">
+        <input type="text" name="name" id="name" placeholder="Enter Name" required>
+        <input type="file" name="image" id="image" accept="image/*" required>
+        <button type="submit">Submit</button>
+    </form>
 
-    <div class="container">
-        <h2>Face Detection & Image Upload</h2>
-
-        <!-- Tab Navigation -->
-        <div class="tabs">
-            <div class="tab active" id="uploadTab">Upload Image</div>
-            <div class="tab" id="alertsTab">Face Alerts</div>
-        </div>
-
-        <!-- Upload Form Section -->
-        <div class="form-container active" id="uploadFormContainer">
-            <form id="imageForm">
-                <input type="text" name="name" id="name" placeholder="Enter Name" required>
-                <input type="file" name="image" id="image" accept="image/*" required>
-                <button type="submit">Submit</button>
-            </form>
-        </div>
-
-        <!-- Alerts Section -->
-        <div class="form-container" id="alertsContainer">
-            <h2>Face Detection Alerts</h2>
-            <div id="alerts"></div>
-        </div>
-    </div>
-
-    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <h2>Face Detection Alerts</h2>
+    <div id="alerts"></div>
 
     <script>
         const socket = io("https://improved-halibut-r4p9pv9w4q4w3pr9v-5000.app.github.dev");
 
-        // Handle tab switching
-        document.getElementById('uploadTab').addEventListener('click', function() {
-            document.getElementById('uploadFormContainer').classList.add('active');
-            document.getElementById('alertsContainer').classList.remove('active');
-            this.classList.add('active');
-            document.getElementById('alertsTab').classList.remove('active');
-        });
-
-        document.getElementById('alertsTab').addEventListener('click', function() {
-            document.getElementById('alertsContainer').classList.add('active');
-            document.getElementById('uploadFormContainer').classList.remove('active');
-            this.classList.add('active');
-            document.getElementById('uploadTab').classList.remove('active');
-        });
-
-        // Handling image form submission
         document.getElementById("imageForm").addEventListener("submit", function(event) {
             event.preventDefault();
 
-            let formData = new FormData();
+            let formData = new FormData(); 
             formData.append("name", document.getElementById("name").value);
             formData.append("image", document.getElementById("image").files[0]);
 
-            // Send image data to server for processing
             fetch("https://improved-halibut-r4p9pv9w4q4w3pr9v-5000.app.github.dev/image_data", {
                 method: "POST",
                 body: formData
             })
             .then(response => response.json())
-            .then(data => {
-                alert("Success: " + data.message);
-            })
-            .catch(error => {
-                alert("Error: " + error);
-            });
+            .then(data => alert("Success: " + data.message))
+            .catch(error => alert("Error: " + error));
         });
 
-        // Listening for face detection alerts from SocketIO
+        // Socket.io event listener for face detection
         socket.on("face_detected", function(data) {
             let alertBox = document.getElementById("alerts");
             let newAlert = document.createElement("div");
-            newAlert.classList.add("alert");
             newAlert.innerHTML = `<p><strong>Alert:</strong> ${data.message}</p>`;
+            newAlert.style.color = "blue";
+            newAlert.style.fontWeight = "bold";
             alertBox.appendChild(newAlert);
-
-            // Automatically remove the alert after 5 seconds
-            setTimeout(() => {
-                alertBox.removeChild(newAlert);
-            }, 5000);
         });
     </script>
 </body>

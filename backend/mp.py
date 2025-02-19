@@ -2,7 +2,7 @@ import cv2
 import torch
 import numpy as np
 import pymongo
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_socketio import SocketIO
 from ultralytics import YOLO
 from facenet_pytorch import InceptionResnetV1
@@ -10,6 +10,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import os
 from dotenv import load_dotenv
 from flask_cors import CORS
+import threading
 
 load_dotenv()
 
@@ -86,8 +87,9 @@ def process_faces(image, store=False, name = None, idNum = None, crime = None):
                 else:
                     best_match, similarity = find_best_match(face_vector)
                     if best_match != "Unknown Person":
-                        print(f"Best Match: {best_match}, Similarity: {similarity*100:.2f}%")
+                        print("face_detected", {"message": f"Face detected: {best_match}, Similarity: {similarity*100:.2f}%"})
                         socketio.emit("face_detected", {"message": f"Face detected: {best_match}, Similarity: {similarity*100:.2f}%"})
+
 
 @app.route('/image_data', methods = ["POST"])
 def process_image_data():
@@ -110,20 +112,30 @@ def process_image_data():
     return jsonify({"message": f"Face processed and stored successfully for {name}"})
 
 def rtsp_stream():
-    cap = cv2.VideoCapture("Title_1.mp4") # http://192.0.0.4:3000
+    cap = cv2.VideoCapture("Title_3.mp4") # http://192.0.0.4:3000
 
     while True:
         ret, frame = cap.read()
         if not ret or frame is None:
             print("Error: Frame not captured")
-            # cap.set(cv2.CAP_PROP_POS_FRAMES, 0) 
-            # continue
+            cap.set(cv2.CAP_PROP_POS_FRAMES, 0) 
+            continue
 
-            break
+            # break
 
         process_faces(frame, store=False)
 
-    cap.release()
+        _, buffer = cv2.imencode('.jpg', frame)
+        frame_bytes = buffer.tobytes()
+
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+        
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(rtsp_stream(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
     socketio.start_background_task(rtsp_stream)
