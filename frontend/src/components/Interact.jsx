@@ -283,8 +283,10 @@ const Interact = () => {
         </ol>
       </Dialog>
 
-      <Dialog transitionDuration={0} open={socketAlert} onClose={() => setSocketAlert(!socketAlert)}>
-       
+      <Dialog transitionDuration={0} open={alertDialog} onClose={() => setAlertDialog(!alertDialog)}>
+       {console.log(socketAlert)
+
+       }
       </Dialog>
 
     </>

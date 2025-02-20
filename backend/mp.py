@@ -14,23 +14,16 @@ import threading
 
 load_dotenv()
 
-# Flask app setup
 app = Flask(__name__)
 CORS(app)
-# app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  
-
-# socketio = SocketIO(app)
 socketio = SocketIO(app, cors_allowed_origins="*", max_http_buffer_size=100 * 1024 * 1024)
 
-@app.route('/health', methods=['GET'])
-def health_check():
-    return {"host": request.host}
 
-# Load models
 model = YOLO("yolov8n-face.pt")
 facenet = InceptionResnetV1(pretrained='vggface2').eval()
 
-# MongoDB setup
+id = ""
+
 client = pymongo.MongoClient(os.getenv("MONGO_URI"))
 db = client["face_recognition"]
 collection = db["face_vectors"]
@@ -38,22 +31,11 @@ collection = db["face_vectors"]
 def normalize_vector(vector):
     return vector / np.linalg.norm(vector)
 
-def store_face_vector(name, vector, idNum, crime):
-    if not is_vector_stored(vector):
-        collection.insert_one({"name": name, "idNum": idNum, "crime": crime, "face_vector": vector.tolist()})
-        print(f"✅ Face vector stored for {name}")
-        get_all_vectors()
-        
-def get_all_vectors():
-    data = collection.find({}, {"face_vector": 1, "name": 1})
-    return [(item["name"], np.array(item["face_vector"])) for item in data]
 
-def is_vector_stored(new_vector):
-    stored_vectors = get_all_vectors()
-    for _, stored_vector in stored_vectors:
-        if np.allclose(new_vector, stored_vector, atol=1e-5):
-            return True
-    return False
+def get_all_vectors():
+    data = collection.find({}, {"face_vector": 1, "name": 1, "idNum": 1, "crime": 1})
+    return [(str(item["_id"]), item["name"], np.array(item["face_vector"]), item["idNum"], item["crime"]) for item in data]
+
 
 def find_best_match(input_vector, threshold=0.6):
     stored_vectors = get_all_vectors()
@@ -68,7 +50,11 @@ def find_best_match(input_vector, threshold=0.6):
 
     return (best_match, highest_similarity) if highest_similarity >= threshold else ("Unknown Person", highest_similarity)
 
-def process_faces(image, store=False, name = None, idNum = None, crime = None):
+def store_face_vector(name, vector, idNum, crime):
+    collection.insert_one({"name": name, "idNum": idNum, "crime": crime, "face_vector": vector.tolist()})
+    print(f"✅ Face vector stored for {name}")
+
+def process_faces(image, store=False, name=None, idNum=None, crime=None):
     results = model.predict(image, verbose=False)
     for result in results:
         for box in result.boxes.xyxy:
@@ -85,58 +71,74 @@ def process_faces(image, store=False, name = None, idNum = None, crime = None):
                 if store:
                     store_face_vector(name, face_vector, idNum, crime)
                 else:
-                    best_match, similarity = find_best_match(face_vector)
-                    if best_match != "Unknown Person":
-                        print("face_detected", {"message": f"Face detected: {best_match}, Similarity: {similarity*100:.2f}%"})
+                    _id, best_match, similarity = find_best_match(face_vector)
+                    if best_match != "Unknown Person" and id != _id:
+                        id = _id
                         socketio.emit("face_detected", {"message": f"Face detected: {best_match}, Similarity: {similarity*100:.2f}%"})
 
 
-@app.route('/image_data', methods = ["POST"])
+def process_faces_threaded(image, store=False, name=None, idNum=None, crime=None):
+    thread = threading.Thread(target=process_faces, args=(image, store, name, idNum, crime))
+    thread.daemon = True
+    thread.start()
+
+@app.route('/image_data', methods=["POST"])
 def process_image_data():
     name = request.form.get('name')
     crime = request.form.get('crime')
     idNum = request.form.get('idNum')
     file = request.files.get('image')
 
-    if not name:
-        return jsonify({"error": "Name is required"}), 400
+    if not name or not file:
+        return jsonify({"error": "Missing required fields"}), 400
 
-    if not file:
-        return jsonify({"error": "No image provided"}), 400
-    
     image = np.frombuffer(file.read(), np.uint8)
     image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-     
-    process_faces(image, store=True, name=name, idNum=idNum, crime=crime)
-    
+
+    process_faces_threaded(image, store=True, name=name, idNum=idNum, crime=crime)
+
     return jsonify({"message": f"Face processed and stored successfully for {name}"})
 
+@app.route('/image_identify', methods=["POST"])
+def process_image_data_to_identify():
+    file = request.files.get('image')
+
+    if not file:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    image = np.frombuffer(file.read(), np.uint8)
+    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+
+    process_faces_threaded(image, store=False)
+
+
+
 def rtsp_stream():
-    cap = cv2.VideoCapture("Title_3.mp4") # http://192.0.0.4:3000
+    cap = cv2.VideoCapture("Title_3.mp4") 
 
     while True:
         ret, frame = cap.read()
         if not ret or frame is None:
             print("Error: Frame not captured")
-            cap.set(cv2.CAP_PROP_POS_FRAMES, 0) 
+            cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
             continue
 
-            # break
-
-        process_faces(frame, store=False)
-
-        _, buffer = cv2.imencode('.jpg', frame)
+        process_faces_threaded(frame, store=False) 
+        _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 50])  
         frame_bytes = buffer.tobytes()
 
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
-        
-
 @app.route('/video_feed')
 def video_feed():
     return Response(rtsp_stream(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
+
+@app.route('/all_data')
+def view_remove():
+    return get_all_vectors()
+
 if __name__ == '__main__':
     socketio.start_background_task(rtsp_stream)
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True )
