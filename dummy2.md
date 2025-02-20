@@ -48,3 +48,41 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+         _, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 50])  
+                 frame_bytes = buffer.tobytes()
+
+                         yield (b'--frame\r\n'
+                                        b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+                                        @app.route('/video_feed')
+                                        def video_feed():
+                                           return Response(rtsp_stream(),
+                                              mimetype='multipart/x-mixed-replace; boundary=frame')
+                                              
