@@ -127,7 +127,7 @@ def process_image_data_to_identify():
 
 
 @app.route('/rtsp_string', methods=["POST"])
-def process_image_data():
+def process_image_rtsp():
    url  = request.form.get('url')
 
 def rtsp_stream():
