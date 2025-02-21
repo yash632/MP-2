@@ -225,63 +225,26 @@ const Interact = () => {
 
       {/*........ Removeing Data Data .........*/}
       <Dialog transitionDuration={0} open={open5} onClose={() => setOpen5(false)} className="custom-dialog-2">
+  <div className="form-header2 form-header flex items-center">
+    <img onClick={() => setOpen5(false)} src="assets/back.svg" alt="back" className="cursor-pointer" />
+    <h1 className="text-neon">Register a Missing Person Profile</h1>
+  </div>
 
-        <div className="form-header2 form-header">
-          <img onClick={() => setOpen5(false)} src="assets/back.svg" alt="back" />
-          <h1>Register a Mission Person Profile</h1>
+  <ol className="view">
+    <li className="neon-box">
+      <img src="assets/logo.png" alt="" className="neon-image" />
+      
+      <div className="info-container">
+        <div>
+          <h3 className="crime-text">Crime: Unknown</h3>
+          <h1 className="name-text">Naam me nhi btau9</h1>
         </div>
-        <ol className='view'>
+        <Button className="remove-btn">Remove</Button>
+      </div>
+    </li>
+  </ol>
+</Dialog>
 
-          <li>
-            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
-          </li>
-          <li>
-            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
-          </li>
-          <li>
-            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
-          </li>
-          <li>
-            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
-          </li>
-          <li>
-            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
-          </li>
-          <li>
-            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
-          </li>
-          <li>
-            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
-          </li>
-          <li>
-            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
-          </li>
-          <li>
-            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
-          </li>
-          <li>
-            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
-          </li>
-          <li>
-            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
-          </li>
-          <li>
-            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
-          </li>
-          <li>
-            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
-          </li>
-          <li>
-            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
-          </li>
-          <li>
-            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
-          </li>
-          <li>
-            <img src="assets/logo.png" alt="" /><h1>Person/Criminal Name </h1><Button>Remove</Button>
-          </li>
-        </ol>
-      </Dialog>
 
       <Dialog transitionDuration={0} open={alertDialog} onClose={() => setAlertDialog(!alertDialog)}>
        {console.log(socketAlert)
