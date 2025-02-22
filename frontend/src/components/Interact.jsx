@@ -23,18 +23,17 @@ const Interact = () => {
   const [imageUrl, setImageUrl] = useState(null);
 
   useEffect(() => {
-    const socket = io("http://localhost:5000")
+    const socket = io("https://musical-space-acorn-7vpqp4qwvgrvcq6q-5000.app.github.dev/");
 
-    socket.on((data) => {
-      setSocketAlert((premsg => [data, ...premsg]))
-      setAlertDialog(!alertDialog)
-    })
+    socket.on("face_detected", (data) => {
+        setSocketAlert((prevMsgs) => [data, ...prevMsgs]);
+        setAlertDialog(true);        console.log(socketAlert);
+    });
 
     return () => {
-      socket.disconnect();
+        socket.disconnect();
     };
-  }, [setAlertDialog, alertDialog]);
-
+}, []); 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -123,10 +122,10 @@ const Interact = () => {
 
       <div className="frame">
         <h1>RTSP Footage</h1>
-        <img
+       {/* <img
           src="/video_feed"
           alt="RTSP Stream"
-        />
+        /> */}
       </div>
 
 
@@ -225,32 +224,64 @@ const Interact = () => {
 
       {/*........ Removeing Data Data .........*/}
       <Dialog transitionDuration={0} open={open5} onClose={() => setOpen5(false)} className="custom-dialog-2">
-  <div className="form-header2 form-header flex items-center">
-    <img onClick={() => setOpen5(false)} src="assets/back.svg" alt="back" className="cursor-pointer" />
-    <h1 className="text-neon">Register a Missing Person Profile</h1>
-  </div>
-
-  <ol className="view">
-    <li className="neon-box">
-      <img src="assets/logo.png" alt="" className="neon-image" />
-      
-      <div className="info-container">
-        <div>
-          <h3 className="crime-text">Crime: Unknown</h3>
-          <h1 className="name-text">Naam me nhi btau9</h1>
+        <div className="form-header form-header1">
+          <img onClick={() => setOpen5(false)} src="assets/back.svg" alt="back" />
+          <h1>View And Delete The Record</h1>
         </div>
-        <Button className="remove-btn">Remove</Button>
+        <div className="dialog-container dialog-container5">
+
+
+          <ol className="view">
+            <li>
+              <img src="assets/logo.png" alt="Person" />
+              <div><div><h3>Supari killer</h3><h1>Prashant Sahay</h1></div><Button>Remove</Button></div>
+            </li>
+
+            <li>
+              <img src="assets/logo.png" alt="Person" />
+              <div><div><h3>Supari killer</h3><h1>Prashant Sahay</h1></div><Button>Remove</Button></div>
+            </li>
+          
+            <li>
+              <img src="assets/logo.png" alt="Person" />
+              <div><div><h3>Supari killer</h3><h1>Prashant Sahay</h1></div><Button>Remove</Button></div>
+            </li>
+          
+            <li>
+              <img src="assets/logo.png" alt="Person" />
+              <div><div><h3>Supari killer</h3><h1>Prashant Sahay</h1></div><Button>Remove</Button></div>
+            </li>
+          
+            <li>
+              <img src="assets/logo.png" alt="Person" />
+              <div><div><h3>Supari killer</h3><h1>Prashant Sahay</h1></div><Button>Remove</Button></div>
+            </li>
+          
+            <li>
+              <img src="assets/logo.png" alt="Person" />
+              <div><div><h3>Supari killer</h3><h1>Prashant Sahay</h1></div><Button>Remove</Button></div>
+            </li>
+          
+          </ol>
+
       </div>
-    </li>
-  </ol>
+      </Dialog>
+
+      <Dialog transitionDuration={0} open={alertDialog} onClose={() => setAlertDialog(false)}>
+  <div style={{ padding: "20px", maxHeight: "300px", overflowY: "auto" }}>
+    <h2>Alerts</h2>
+    {socketAlert.length > 0 ? (
+      socketAlert.map((alert, index) => (
+        <p key={index} style={{ padding: "10px", borderBottom: "1px solid #ccc" }}>
+          {alert}
+        </p>
+      ))
+    ) : (
+      <p>No alerts yet.</p>
+    )}
+  </div>
 </Dialog>
 
-
-      <Dialog transitionDuration={0} open={alertDialog} onClose={() => setAlertDialog(!alertDialog)}>
-       {console.log(socketAlert)
-
-       }
-      </Dialog>
 
     </>
   )

@@ -93,7 +93,14 @@ def process_faces(image, store=False, name=None, idNum=None, crime=None):
                     if best_match != "Unknown Person" and prev_id != _id:
                         prev_id = _id
                         print("face_detected", {"message": f"Face detected: {best_match}, Similarity: {similarity*100:.2f}%"})
-                        socketio.emit("face_detected", {"message": f"Face detected: {best_match}, Similarity: {similarity*100:.2f}%"})
+                        
+                        socketio.emit("face_detected", {
+    "Name": best_match,
+    "Identification Number": idNum,
+    "Crime": crime,
+    "Similarity": f"{similarity*100:.2f}%"
+})
+
 
 
 @app.route('/image_data', methods=["POST"])
