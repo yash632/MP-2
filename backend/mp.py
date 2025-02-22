@@ -139,8 +139,9 @@ def process_image_rtsp():
 
 def rtsp_stream():
 
-    cap = cv2.VideoCapture("Title_3.mp4") 
-
+    cap = cv2.VideoCapture("Title_23.mp4") 
+    # http://192.0.0.4:8080
+    
     while True:
         ret, frame = cap.read()
         if not ret or frame is None:
@@ -153,7 +154,7 @@ def rtsp_stream():
 @app.route('/all_data')
 def view_remove():
     data = get_all_vectors() 
-    subset = [(item[0], item[1]) for item in data]
+    subset = [(item[0], item[1], item[2]) for item in data]
     return jsonify(subset)
 
 
