@@ -5,6 +5,7 @@ import { io } from "socket.io-client";
 import axios from 'axios';
 
 const Interact = () => {
+  let view_data 
   const [socketAlert, setSocketAlert] = useState([])
   const [alertDialog, setAlertDialog] = useState(false)
 
@@ -26,14 +27,14 @@ const Interact = () => {
     const socket = io("https://musical-space-acorn-7vpqp4qwvgrvcq6q-5000.app.github.dev/");
 
     socket.on("face_detected", (data) => {
-        setSocketAlert((prevMsgs) => [data, ...prevMsgs]);
-        setAlertDialog(true);        console.log(socketAlert);
+      setSocketAlert((prevMsgs) => [data, ...prevMsgs]);
+      setAlertDialog(true); console.log(socketAlert);
     });
 
     return () => {
-        socket.disconnect();
+      socket.disconnect();
     };
-}, []); 
+  }, []);
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -95,6 +96,9 @@ const Interact = () => {
     }
   };
 
+  const retrive_view = async () => {
+    view_data = await axios.get("/all_data")
+  }
 
   return (
     <>
@@ -115,14 +119,22 @@ const Interact = () => {
         <div onClick={() => setOpen4(true)}>
           Image Identifier
         </div>
-        <div onClick={() => setOpen5(true)}>
+
+        <div onClick={() => {
+          setOpen5(true);
+          retrive_view();
+        }}>
           View & Remove Records
+        </div>
+
+        <div onClick={() => setAlertDialog(true)}>
+          View Alerts
         </div>
       </div>
 
       <div className="frame">
         <h1>RTSP Footage</h1>
-       {/* <img
+        {/* <img
           src="/video_feed"
           alt="RTSP Stream"
         /> */}
@@ -236,51 +248,36 @@ const Interact = () => {
               <img src="assets/logo.png" alt="Person" />
               <div><div><h3>Supari killer</h3><h1>Prashant Sahay</h1></div><Button>Remove</Button></div>
             </li>
+          {
+           view_data < 0 && view_data.map((field) => (
+              <li>
+              <img src="assets/logo.png" alt="Person" />
+              <div><div><h3>{field.crime}</h3><h1>{field.name}</h1></div><Button>Remove</Button></div>
+              </li>
+            ))
+          }
 
-            <li>
-              <img src="assets/logo.png" alt="Person" />
-              <div><div><h3>Supari killer</h3><h1>Prashant Sahay</h1></div><Button>Remove</Button></div>
-            </li>
-          
-            <li>
-              <img src="assets/logo.png" alt="Person" />
-              <div><div><h3>Supari killer</h3><h1>Prashant Sahay</h1></div><Button>Remove</Button></div>
-            </li>
-          
-            <li>
-              <img src="assets/logo.png" alt="Person" />
-              <div><div><h3>Supari killer</h3><h1>Prashant Sahay</h1></div><Button>Remove</Button></div>
-            </li>
-          
-            <li>
-              <img src="assets/logo.png" alt="Person" />
-              <div><div><h3>Supari killer</h3><h1>Prashant Sahay</h1></div><Button>Remove</Button></div>
-            </li>
-          
-            <li>
-              <img src="assets/logo.png" alt="Person" />
-              <div><div><h3>Supari killer</h3><h1>Prashant Sahay</h1></div><Button>Remove</Button></div>
-            </li>
-          
+
           </ol>
 
-      </div>
+        </div>
       </Dialog>
 
       <Dialog transitionDuration={0} open={alertDialog} onClose={() => setAlertDialog(false)}>
-  <div style={{ padding: "20px", maxHeight: "300px", overflowY: "auto" }}>
-    <h2>Alerts</h2>
-    {socketAlert.length > 0 ? (
-      socketAlert.map((alert, index) => (
-        <p key={index} style={{ padding: "10px", borderBottom: "1px solid #ccc" }}>
-          {alert}
-        </p>
-      ))
-    ) : (
-      <p>No alerts yet.</p>
-    )}
-  </div>
-</Dialog>
+        <div style={{ padding: "20px", maxHeight: "300px", overflowY: "auto" }}>
+          <h2>Alerts</h2>
+          {socketAlert.length > 0 ? (
+            socketAlert.map((alert, index) => (
+              <p key={index} style={{ padding: "10px", borderBottom: "1px solid #ccc" }}>
+                {alert.Name}
+                <img src={alert.Image} alt="i" />
+              </p>
+            ))
+          ) : (
+            <p>No alerts yet.</p>
+          )}
+        </div>
+      </Dialog>
 
 
     </>
