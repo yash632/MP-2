@@ -5,7 +5,7 @@ import { io } from "socket.io-client";
 import axios from 'axios';
 
 const Interact = () => {
-  let view_data 
+  const [viewData, setViewData] = useState()
   const [socketAlert, setSocketAlert] = useState([])
   const [alertDialog, setAlertDialog] = useState(false)
 
@@ -24,7 +24,13 @@ const Interact = () => {
   const [imageUrl, setImageUrl] = useState(null);
 
   useEffect(() => {
-    const socket = io("https://musical-space-acorn-7vpqp4qwvgrvcq6q-5000.app.github.dev/");
+    const socket = io("https://supreme-space-enigma-q7j9wg76rjvf4j6j-5000.app.github.dev/", {
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: 15,
+      reconnectionDelay: 1000
+    });
+
 
     socket.on("face_detected", (data) => {
       setSocketAlert((prevMsgs) => [data, ...prevMsgs]);
@@ -62,10 +68,7 @@ const Interact = () => {
 
   const criminal_submit_handler = async (e) => {
     e.preventDefault();
-    if (crime === "") {
-      setCrime("Missing Person");
-    }
-
+   
     if (!name || !image) {
       alert("Please provide all details!");
       return;
@@ -75,8 +78,12 @@ const Interact = () => {
     formData.append("name", name);
     formData.append("image", image);
     formData.append("idNum", idNum);
-    formData.append("crime", crime);
-
+    if (crime === "") {
+    formData.append("crime", "Missing Person");
+    }
+    else{
+      formData.append("crime", crime);
+    }
     try {
       const response = await axios.post("/image_data",
         formData,
@@ -89,6 +96,8 @@ const Interact = () => {
       setImage(null)
       setImageUrl(null)
       setIdNum("")
+      setOpen2(false)
+      setOpen3(false)
 
     } catch (error) {
       console.error("Error adding criminal:", error);
@@ -97,8 +106,32 @@ const Interact = () => {
   };
 
   const retrive_view = async () => {
-    view_data = await axios.get("/all_data")
+    try {
+      
+    const response = await axios.get("/all_data")
+    setViewData(response.data)
+    console.log(viewData);
+    } catch (error) {
+       console.log(error);
+       
+    }
+
   }
+  
+  const delete_record_handler = async (objectId) => {
+    try {
+      
+    const response = await axios.post("/delete_document", {objectId})
+    if (response.status === 200){
+      retrive_view()
+    }
+    } catch (error) {
+       console.log(error);
+       
+    }
+
+  }
+ 
 
   return (
     <>
@@ -151,7 +184,7 @@ const Interact = () => {
           </div>
 
           <form onSubmit={rtsp_submit_handler} className="form-body">
-            <input type="text" placeholder="Enter RTSP URL" onChange={(e) => setRtsp(e.target.value)} />
+            <input type="text" placeholder="Enter RTSP URL" onChange={(e) => setRtsp(e.target.value)} required/>
             <Button type='submit' variant="contained" className="connect-btn">Connect</Button>
           </form>
         </div>
@@ -200,7 +233,7 @@ const Interact = () => {
 
         <div className="form-header2 form-header">
           <img onClick={() => setOpen3(false)} src="assets/back.svg" alt="back" />
-          <h1>Register a Mission Person Profile</h1>
+          <h1>Register a Missing Person Profile</h1>
         </div>
 
         <form onSubmit={criminal_submit_handler} className="dialog-container-2">
@@ -244,18 +277,19 @@ const Interact = () => {
 
 
           <ol className="view">
-            <li>
-              <img src="assets/logo.png" alt="Person" />
-              <div><div><h3>Supari killer</h3><h1>Prashant Sahay</h1></div><Button>Remove</Button></div>
-            </li>
-          {
-           view_data < 0 && view_data.map((field) => (
+            
+            {viewData && viewData.length > 0 ? viewData.map((field) => (
               <li>
-              <img src="assets/logo.png" alt="Person" />
-              <div><div><h3>{field.crime}</h3><h1>{field.name}</h1></div><Button>Remove</Button></div>
+                <img src={field[1]} alt="Person" />
+                <div>
+                  <div>
+                    <h3>{field[4]}</h3>
+                    <h1>{field[3]}</h1>
+                  </div>
+                  <Button onClick={()=>delete_record_handler(field[0])}>Remove</Button>
+                </div>
               </li>
-            ))
-          }
+            )):<p>loding...</p>}
 
 
           </ol>
@@ -270,7 +304,9 @@ const Interact = () => {
             socketAlert.map((alert, index) => (
               <p key={index} style={{ padding: "10px", borderBottom: "1px solid #ccc" }}>
                 {alert.Name}
-                <img src={alert.Image} alt="i" />
+                {alert.Similarity} similar
+                <img src={alert.image_bytes} alt="i" />
+                <img src={alert.url} alt="i" />
               </p>
             ))
           ) : (
