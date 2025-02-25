@@ -12,12 +12,14 @@ from dotenv import load_dotenv
 from flask_cors import CORS
 import cloudinary
 import cloudinary.uploader
+import threading
+
 
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
-socketio = SocketIO(app, cors_allowed_origins="*", max_http_buffer_size=100 * 1024 * 1024)
+socketio = SocketIO(app, async_mode='threading', cors_allowed_origins="*", max_http_buffer_size=100 * 1024 * 1024)
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUD_NAME"),
@@ -27,7 +29,7 @@ cloudinary.config(
 
 prev_id = ""
 image_file = None
-url = "Title_2.mp4"
+url = "Title_3.mp4"
 
 model = YOLO("yolov8n-face.pt")
 facenet = InceptionResnetV1(pretrained='vggface2').eval()
@@ -61,22 +63,24 @@ def find_best_match(input_vector, threshold=0.65):
     if not stored_vectors:
         return (None, "Unknown Person", "", "", None)
     
-    best_id, best_name, best_crime, best_idNum = None, None, None, None
+    best_id, best_url, best_public_id, best_name, best_crime, best_idNum = None, None, None, None, None, None
     highest_similarity = -1
     
-    for _id, name, crime, idNum, stored_vector in stored_vectors:
+    for _id, url, public_id, name, crime, idNum, stored_vector in stored_vectors:
         sim = cosine_similarity(input_vector.reshape(1, -1), stored_vector.reshape(1, -1))[0][0]
         if sim > highest_similarity:
             highest_similarity = sim
             best_id = _id
+            best_url = url
+            best_public_id = public_id
             best_name = name
             best_crime = crime
             best_idNum = idNum
 
     if highest_similarity >= threshold:
-        return (best_id, best_name, best_crime, best_idNum, highest_similarity)
+        return (best_id, best_url, best_public_id, best_name, best_crime, best_idNum, highest_similarity)
     else:
-        return (best_id, "Unknown Person", "", "", highest_similarity)
+        return (best_id, best_url, best_public_id, "Unknown Person", "", "", highest_similarity)
 
 def store_face_vector(name, vector, idNum, crime):
     global image_file
@@ -104,10 +108,11 @@ def process_faces(image, store=False, name=None, idNum=None, crime=None):
                 if store:
                     store_face_vector(name, face_vector, idNum, crime)
                 else:
-                    _id, url, best_match, crime, idNum, similarity = find_best_match(face_vector)
+                    _id, url, public_id, best_match, crime, idNum, similarity = find_best_match(face_vector)
                     if best_match != "Unknown Person" and prev_id != _id:
                         prev_id = _id
-                        print("face_detected", {"message": f"Face detected: {best_match}, Similarity: {similarity*100:.2f}%"})
+                        print("face_detected")
+                        
                         _, buffer = cv2.imencode('.jpg', image, [cv2.IMWRITE_JPEG_QUALITY, 50])  
                         image_bytes = buffer.tobytes()
 
@@ -222,6 +227,7 @@ def delete_document():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+               
 if __name__ == '__main__':
     socketio.start_background_task(rtsp_stream)
-    socketio.run(app, host='0.0.0.0', port=5000, debug=True )
+    socketio.run(app, host='0.0.0.0', port=5000)

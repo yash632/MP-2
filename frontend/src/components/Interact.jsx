@@ -3,8 +3,16 @@ import '../stylesheets/interact.css'
 import { Button, Dialog } from "@mui/material";
 import { io } from "socket.io-client";
 import axios from 'axios';
+import PreventRefresh from './PreventRefresh';
 
 const Interact = () => {
+  let alert_sfx = new Audio("assets/alert.mp3")
+  
+  const [played, setPlayed] = useState(true)
+
+
+  const [filter, setFilter] = useState(false)
+
   const [viewData, setViewData] = useState()
   const [socketAlert, setSocketAlert] = useState([])
   const [alertDialog, setAlertDialog] = useState(false)
@@ -23,24 +31,38 @@ const Interact = () => {
   const [image, setImage] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
 
+  
   useEffect(() => {
     const socket = io("https://supreme-space-enigma-q7j9wg76rjvf4j6j-5000.app.github.dev/", {
       transports: ['websocket'],
       reconnection: true,
-      reconnectionAttempts: 15,
       reconnectionDelay: 1000
     });
-
+    
 
     socket.on("face_detected", (data) => {
       setSocketAlert((prevMsgs) => [data, ...prevMsgs]);
-      setAlertDialog(true); console.log(socketAlert);
+      setAlertDialog(true);
+if (played === false){
+        alert_sfx.play();
+      }
+      let count = 0;
+      const interval = setInterval(() => {
+        if (count < 9) {
+          setFilter((prev) => !prev);
+        } else {
+          setFilter(false); 
+          clearInterval(interval);
+        }
+        count += 1;
+      }, 500);
     });
 
     return () => {
       socket.disconnect();
     };
-  }, []);
+  });
+
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -49,6 +71,7 @@ const Interact = () => {
       setImage(file);
     }
   };
+
 
 
   const rtsp_submit_handler = async (e) => {
@@ -68,7 +91,7 @@ const Interact = () => {
 
   const criminal_submit_handler = async (e) => {
     e.preventDefault();
-   
+
     if (!name || !image) {
       alert("Please provide all details!");
       return;
@@ -79,9 +102,9 @@ const Interact = () => {
     formData.append("image", image);
     formData.append("idNum", idNum);
     if (crime === "") {
-    formData.append("crime", "Missing Person");
+      formData.append("crime", "Missing Person");
     }
-    else{
+    else {
       formData.append("crime", crime);
     }
     try {
@@ -107,36 +130,38 @@ const Interact = () => {
 
   const retrive_view = async () => {
     try {
-      
-    const response = await axios.get("/all_data")
-    setViewData(response.data)
-    console.log(viewData);
+
+      const response = await axios.get("/all_data")
+      setViewData(response.data)
+      console.log(viewData);
     } catch (error) {
-       console.log(error);
-       
+      console.log(error);
+
     }
 
   }
-  
+
   const delete_record_handler = async (objectId) => {
     try {
-      
-    const response = await axios.post("/delete_document", {objectId})
-    if (response.status === 200){
-      retrive_view()
-    }
+
+      const response = await axios.post("/delete_document", { objectId })
+      if (response.status === 200) {
+        retrive_view()
+      }
     } catch (error) {
-       console.log(error);
-       
+      console.log(error);
+
     }
 
   }
- 
+
 
   return (
-    <>
+    <Dialog open={true} className='prevent_refresh'>
+      <PreventRefresh />
+      <Dialog className="alert_filter" open={filter}></Dialog>
       <div className='top_nav'>
-        <img src="assets/logo.png" alt="" />
+        <img src="assets/logo.png" alt="logo"/>
         <Button>Logout</Button>
       </div>
       <div className="side_bar">
@@ -160,7 +185,10 @@ const Interact = () => {
           View & Remove Records
         </div>
 
-        <div onClick={() => setAlertDialog(true)}>
+        <div onClick={() => {
+          setAlertDialog(true)
+          setFilter(false)
+        }}>
           View Alerts
         </div>
       </div>
@@ -173,6 +201,12 @@ const Interact = () => {
         /> */}
       </div>
 
+      <Dialog transitionDuration={0} open={played} onClose={() => setPlayed(false)} className="custom-dialog">
+        <div className="dialog-container">
+<h1 className='played_alert'><center>We'd like to play alert sounds for important notifications. Please grant permission.</center></h1>
+            <Button onClick={()=>setPlayed(false)} variant="contained" className="connect-btn">Ok</Button>
+        </div>
+      </Dialog>
 
 
       {/*......... RTSP Connection .........*/}
@@ -184,7 +218,7 @@ const Interact = () => {
           </div>
 
           <form onSubmit={rtsp_submit_handler} className="form-body">
-            <input type="text" placeholder="Enter RTSP URL" onChange={(e) => setRtsp(e.target.value)} required/>
+            <input type="text" placeholder="Enter RTSP URL" onChange={(e) => setRtsp(e.target.value)} required />
             <Button type='submit' variant="contained" className="connect-btn">Connect</Button>
           </form>
         </div>
@@ -277,7 +311,7 @@ const Interact = () => {
 
 
           <ol className="view">
-            
+
             {viewData && viewData.length > 0 ? viewData.map((field) => (
               <li>
                 <img src={field[1]} alt="Person" />
@@ -286,10 +320,10 @@ const Interact = () => {
                     <h3>{field[4]}</h3>
                     <h1>{field[3]}</h1>
                   </div>
-                  <Button onClick={()=>delete_record_handler(field[0])}>Remove</Button>
+                  <Button onClick={() => delete_record_handler(field[0])}>Remove</Button>
                 </div>
               </li>
-            )):<p>loding...</p>}
+            )) : <p>loding...</p>}
 
 
           </ol>
@@ -297,26 +331,48 @@ const Interact = () => {
         </div>
       </Dialog>
 
-      <Dialog transitionDuration={0} open={alertDialog} onClose={() => setAlertDialog(false)}>
-        <div style={{ padding: "20px", maxHeight: "300px", overflowY: "auto" }}>
-          <h2>Alerts</h2>
-          {socketAlert.length > 0 ? (
-            socketAlert.map((alert, index) => (
-              <p key={index} style={{ padding: "10px", borderBottom: "1px solid #ccc" }}>
-                {alert.Name}
-                {alert.Similarity} similar
-                <img src={alert.image_bytes} alt="i" />
-                <img src={alert.url} alt="i" />
-              </p>
-            ))
-          ) : (
-            <p>No alerts yet.</p>
-          )}
+
+      <Dialog transitionDuration={0} open={alertDialog} onClose={() => setAlertDialog(false)} className="custom-dialog-2">
+        <div className="form-header form-header1">
+          <img onClick={() => setAlertDialog(false)} src="assets/back.svg" alt="back" />
+          <h1>Alerts</h1>
+        </div>
+        <div className="dialog-container dialog-container5">
+
+
+          <ol className="alert">
+
+
+            {socketAlert.length > 0 ? (
+              socketAlert.map((alert, index) => (
+                <li key={index} className="alert_container">
+                  <div>
+                    <div className='alert_details2'><h2><center>Stored Image</center></h2>
+                      <h2><center>Matched Image</center></h2></div>
+                    <div>
+                      <img src={alert.url} alt="i" />
+                      <img src={URL.createObjectURL(new Blob([new Uint8Array(alert.image_bytes)], { type: 'image/jpeg' }))} alt="alert_image" />
+
+                    </div>
+                    <div className='alert_details'><h2><center>{alert.Name}</center></h2>
+                      <h2><center>{alert.Crime}</center></h2></div>
+
+
+                    <div className='alert_details'><h2><center>{alert.Similarity} Similarity</center></h2></div>
+                  </div>
+
+                </li>
+              ))
+            ) : (
+              <li className='blank_alert'><h1>No alerts yet.</h1></li>
+            )}
+
+          </ol>
+
         </div>
       </Dialog>
 
-
-    </>
+    </Dialog>
   )
 }
 
