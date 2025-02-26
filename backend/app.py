@@ -18,7 +18,7 @@ import threading
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+
 socketio = SocketIO(app, async_mode='threading', cors_allowed_origins="*", max_http_buffer_size=100 * 1024 * 1024)
 
 cloudinary.config(
@@ -57,9 +57,9 @@ def get_all_vectors():
         for item in data
     ]
 
+stored_vectors = get_all_vectors()
 
 def find_best_match(input_vector, threshold=0.65):
-    stored_vectors = get_all_vectors()
     if not stored_vectors:
         return (None, "Unknown Person", "", "", None)
     
@@ -144,18 +144,6 @@ def process_image_data():
 
     return jsonify({"message": f"Face processed and stored successfully for {name}"})
 
-@app.route('/image_identify', methods=["POST"])
-def process_image_data_to_identify():
-    file = request.files.get('image')
-
-    if not file:
-        return jsonify({"error": "Missing required fields"}), 400
-
-    image = np.frombuffer(file.read(), np.uint8)
-    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-
-    process_faces(image, store=False)
-
 
 @app.route('/rtsp_data', methods=["POST"])
 def rtsp_link_handler():
@@ -166,11 +154,19 @@ def rtsp_link_handler():
     
     return jsonify({"status": "success", "message": "RTSP Setup Successful"})
 
+
+frame_count = 0
+skip_frames = 2 
+
+
 def rtsp_stream():
     global url
     current_url = url  
     cap = cv2.VideoCapture(current_url)
     
+    global frame_count
+    global skip_frames
+
     while True:
         if current_url != url:
             print("URL updated, switching stream...")
@@ -184,6 +180,10 @@ def rtsp_stream():
             cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
             continue
            # break
+        frame_count += 1
+    
+        if frame_count % skip_frames != 0:
+            continue
 
         process_faces(frame, store=False)
 
