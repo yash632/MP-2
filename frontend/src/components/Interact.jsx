@@ -23,7 +23,7 @@ const Interact = () => {
   const [open2, setOpen2] = useState(false);
   const [open3, setOpen3] = useState(false);
   const [open5, setOpen5] = useState(false);
-
+  const [mode, setMode] = useState(false)
   const [rtsp, setRtsp] = useState("")
 
   const [name, setName] = useState("")
@@ -43,6 +43,7 @@ const Interact = () => {
 
     socket.on("face_detected", (data) => {
       setSocketAlert((prevMsgs) => [data, ...prevMsgs]);
+      if (mode){
       setAlertDialog(true);
       if (played === false) {
         alert_sfx.play();
@@ -57,8 +58,9 @@ const Interact = () => {
         }
         count += 1;
       }, 500);
+    }
     });
-
+  
     return () => {
       socket.disconnect();
     };
@@ -164,8 +166,8 @@ const Interact = () => {
       <Dialog className="alert_filter" open={filter}></Dialog>
       <div className='top_nav'>
         <img src="assets/logo.png" alt="logo" />
-        <Button>VISION SAFE</Button>
-      </div>
+        <img className="button" src="assets/wordmark.png" alt="logo" />
+        </div>
       <div className="side_bar">
         <div onClick={() => setOpen(true)}>
           Connect/Change RTSP
@@ -189,6 +191,11 @@ const Interact = () => {
           setFilter(false)
         }}>
           View Alerts
+        </div>
+        <div onClick={() => {
+          setMode(!mode);
+        }}>
+          Alert Mode {mode ? "On" : "Off"}
         </div>
       </div>
 

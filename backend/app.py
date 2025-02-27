@@ -2,7 +2,7 @@ import cv2
 import torch
 import numpy as np
 import pymongo
-from flask import Flask, request, jsonify, Response
+from flask import Flask, request, jsonify, send_from_directory
 from flask_socketio import SocketIO
 from ultralytics import YOLO
 from facenet_pytorch import InceptionResnetV1
@@ -17,7 +17,9 @@ import threading
 
 load_dotenv()
 
-app = Flask(__name__)
+frontend_build_path = os.path.abspath("../frontend/build")
+
+app = Flask(__name__, static_folder=frontend_build_path)
 
 socketio = SocketIO(app, async_mode='threading', cors_allowed_origins="*", max_http_buffer_size=100 * 1024 * 1024)
 
@@ -34,6 +36,9 @@ url = "Title_3.mp4"
 model = YOLO("yolov8n-face.pt")
 facenet = InceptionResnetV1(pretrained='vggface2').eval()
 
+@app.route("/health")
+def health():
+    return "hello"
 
 client = pymongo.MongoClient(os.getenv("MONGO_URI"))
 db = client["face_recognition"]
@@ -228,7 +233,15 @@ def delete_document():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-               
+
+@app.route("/")
+def serve():
+    return send_from_directory(app.static_folder, "index.html")
+
+@app.route("/<path:path>")
+def static_files(path):
+    return send_from_directory(app.static_folder, path)
+
 if __name__ == '__main__':
     socketio.start_background_task(rtsp_stream)
     socketio.run(app, host='0.0.0.0', port=5000)

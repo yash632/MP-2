@@ -31,17 +31,12 @@
     margin-left: 30px;
 }
 
-.top_nav button {
-    background-color: #1e90ff;
-    color: white;
-    font-weight: bold;
-    border-radius: 8px;
-    padding: 8px 16px;
-    transition: 0.3s ease-in-out;
+.top_nav .button {
+    height: 60px;
     margin-right: 30px;
 }
 
-.top_nav button:hover {
+.top_nav .button:hover {
     background-color: #0d74d3;
 }
 
