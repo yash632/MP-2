@@ -7,11 +7,13 @@ import PreventRefresh from './PreventRefresh';
 
 const Interact = () => {
   let alert_sfx = new Audio("assets/alert.mp3")
-  
+
   const [played, setPlayed] = useState(true)
 
 
   const [filter, setFilter] = useState(false)
+
+  const [rtspUrl, setRtspUrl] = useState("Title_3.mp4")
 
   const [viewData, setViewData] = useState()
   const [socketAlert, setSocketAlert] = useState([])
@@ -20,7 +22,6 @@ const Interact = () => {
   const [open, setOpen] = useState(false);
   const [open2, setOpen2] = useState(false);
   const [open3, setOpen3] = useState(false);
-  const [open4, setOpen4] = useState(false);
   const [open5, setOpen5] = useState(false);
 
   const [rtsp, setRtsp] = useState("")
@@ -31,19 +32,19 @@ const Interact = () => {
   const [image, setImage] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
 
-  
+
   useEffect(() => {
     const socket = io("https://supreme-space-enigma-q7j9wg76rjvf4j6j-5000.app.github.dev/", {
       transports: ['websocket'],
       reconnection: true,
       reconnectionDelay: 1000
     });
-    
+
 
     socket.on("face_detected", (data) => {
       setSocketAlert((prevMsgs) => [data, ...prevMsgs]);
       setAlertDialog(true);
-if (played === false){
+      if (played === false) {
         alert_sfx.play();
       }
       let count = 0;
@@ -51,7 +52,7 @@ if (played === false){
         if (count < 9) {
           setFilter((prev) => !prev);
         } else {
-          setFilter(false); 
+          setFilter(false);
           clearInterval(interval);
         }
         count += 1;
@@ -78,13 +79,14 @@ if (played === false){
     e.preventDefault();
 
     try {
-      const response = await axios.post("/rtsp_data", {
+      await axios.post("/rtsp_url", {
         rtsp
       });
 
-      console.log("RTSP Setup Successful:", response.data);
+      setRtspUrl(rtsp)
+      alert("RTSP Setup Successful");
     } catch (error) {
-      console.error("Error in RTSP Setup:", error);
+      alert("Error in RTSP Setup:", error);
     }
   };
 
@@ -108,7 +110,7 @@ if (played === false){
       formData.append("crime", crime);
     }
     try {
-      const response = await axios.post("/image_data",
+      const response = await axios.post("/register_record",
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -161,8 +163,8 @@ if (played === false){
       <PreventRefresh />
       <Dialog className="alert_filter" open={filter}></Dialog>
       <div className='top_nav'>
-        <img src="assets/logo.png" alt="logo"/>
-        <Button>Logout</Button>
+        <img src="assets/logo.png" alt="logo" />
+        <Button>VISION SAFE</Button>
       </div>
       <div className="side_bar">
         <div onClick={() => setOpen(true)}>
@@ -173,9 +175,6 @@ if (played === false){
         </div>
         <div onClick={() => setOpen3(true)}>
           Add Missing Person Record
-        </div>
-        <div onClick={() => setOpen4(true)}>
-          Image Identifier
         </div>
 
         <div onClick={() => {
@@ -195,16 +194,20 @@ if (played === false){
 
       <div className="frame">
         <h1>RTSP Footage</h1>
-        {/* <img
-          src="/video_feed"
-          alt="RTSP Stream"
-        /> */}
+        <video
+          src={`assets/${rtspUrl}`} 
+          autoPlay
+          muted
+          loop
+          playsInline
+        ></video>
+
       </div>
 
       <Dialog transitionDuration={0} open={played} onClose={() => setPlayed(false)} className="custom-dialog">
         <div className="dialog-container">
-<h1 className='played_alert'><center>We'd like to play alert sounds for important notifications. Please grant permission.</center></h1>
-            <Button onClick={()=>setPlayed(false)} variant="contained" className="connect-btn">Ok</Button>
+          <h1 className='played_alert'><center>We'd like to play alert sounds for important notifications. Please grant permission.</center></h1>
+          <Button onClick={() => setPlayed(false)} variant="contained" className="connect-btn">Ok</Button>
         </div>
       </Dialog>
 
@@ -236,7 +239,7 @@ if (played === false){
           <div className="image-upload-section">
             <img
               onClick={() => document.getElementById('file-upload').click()}
-              src={imageUrl || "assets/logo.png"}
+              src={imageUrl || "assets/LOGO.png"}
               alt="Criminal_Photo"
             />
             <input
@@ -274,7 +277,7 @@ if (played === false){
           <div className="image-upload-section">
             <img
               onClick={() => document.getElementById('file-upload').click()}
-              src={imageUrl || "assets/logo.png"}
+              src={imageUrl || "assets/LOGO.png"}
               alt="Person_Photo"
             />
             <input
@@ -296,9 +299,6 @@ if (played === false){
         </form>
       </Dialog>
 
-
-      {/*........ Find Matches .........*/}
-      <Dialog transitionDuration={0} open={open4} onClose={() => setOpen4(false)} className="custom-dialog-2"></Dialog>
 
 
       {/*........ Removeing Data Data .........*/}

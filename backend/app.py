@@ -57,9 +57,10 @@ def get_all_vectors():
         for item in data
     ]
 
-stored_vectors = get_all_vectors()
 
 def find_best_match(input_vector, threshold=0.65):
+    stored_vectors = get_all_vectors()
+    
     if not stored_vectors:
         return (None, "Unknown Person", "", "", None)
     
@@ -111,7 +112,7 @@ def process_faces(image, store=False, name=None, idNum=None, crime=None):
                     _id, url, public_id, best_match, crime, idNum, similarity = find_best_match(face_vector)
                     if best_match != "Unknown Person" and prev_id != _id:
                         prev_id = _id
-                        print("face_detected")
+                        print("face_detected", best_match)
                         
                         _, buffer = cv2.imencode('.jpg', image, [cv2.IMWRITE_JPEG_QUALITY, 50])  
                         image_bytes = buffer.tobytes()
@@ -125,7 +126,7 @@ def process_faces(image, store=False, name=None, idNum=None, crime=None):
                             "Similarity": f"{similarity*100:.2f}%"
 })
 
-@app.route('/image_data', methods=["POST"])
+@app.route('/register_record', methods=["POST"])
 def process_image_data():
     name = request.form.get('name')
     crime = request.form.get('crime')
@@ -145,7 +146,7 @@ def process_image_data():
     return jsonify({"message": f"Face processed and stored successfully for {name}"})
 
 
-@app.route('/rtsp_data', methods=["POST"])
+@app.route('/rtsp_url', methods=["POST"])
 def rtsp_link_handler():
     data = request.get_json() 
     global url
@@ -156,7 +157,7 @@ def rtsp_link_handler():
 
 
 frame_count = 0
-skip_frames = 2 
+skip_frames = 2
 
 
 def rtsp_stream():
